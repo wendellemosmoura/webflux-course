@@ -1,5 +1,7 @@
 package com.wendellemos.webfluxcourse.controller;
 
+import com.wendellemos.webfluxcourse.model.request.UserRequest;
+import com.wendellemos.webfluxcourse.model.response.UserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
