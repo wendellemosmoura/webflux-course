@@ -7,6 +7,7 @@ import com.wendellemos.webfluxcourse.repository.UserRepository;
 import com.wendellemos.webfluxcourse.service.exception.ObjectNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static java.lang.String.format;
@@ -26,5 +27,9 @@ public class UserService {
                 .switchIfEmpty(Mono.error(new ObjectNotFoundException(
                         format("Object not found. Id: %s, Type: %s", id, User.class.getSimpleName())
                 )));
+    }
+
+    public Flux<User> findAll() {
+        return userRepository.findAll();
     }
 }
