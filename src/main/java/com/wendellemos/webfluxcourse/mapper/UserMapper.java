@@ -2,6 +2,7 @@ package com.wendellemos.webfluxcourse.mapper;
 
 import com.wendellemos.webfluxcourse.entity.User;
 import com.wendellemos.webfluxcourse.model.request.UserRequest;
+import com.wendellemos.webfluxcourse.model.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -13,4 +14,6 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     User toEntity(final UserRequest request);
+
+    UserResponse toResponse(final User entity);
 }
