@@ -68,4 +68,21 @@ class UserServiceTest {
                 .expectComplete()
                 .verify();
     }
+
+    @Test
+    void testUpdate() {
+        UserRequest request = new UserRequest("User", "user@test.com", "123456");
+        User entity = User.builder().build();
+
+        when(userMapper.toEntity(any(UserRequest.class), any(User.class))).thenReturn(entity);
+        when(userRepository.findById(anyString())).thenReturn(Mono.just(entity));
+        when(userRepository.save(any(User.class))).thenReturn(Mono.just(entity));
+
+        Mono<User> result = userService.update("123", request);
+
+        StepVerifier.create(result)
+                .expectNextMatches(user -> user.getClass() == User.class)
+                .expectComplete()
+                .verify();
+    }
 }
