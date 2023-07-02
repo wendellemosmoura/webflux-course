@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +32,11 @@ import static reactor.core.publisher.Mono.just;
 @AutoConfigureWebTestClient
 class UserControllerImplTest {
 
+    public static final String ID = "123456";
+    public static final String NAME = "Test";
+    public static final String EMAIL = "test@test.com";
+    public static final String PASSWORD = "123456";
+
     @Autowired
     private WebTestClient webTestClient;
 
@@ -46,7 +52,7 @@ class UserControllerImplTest {
     @Test
     @DisplayName("Test endoint save with success")
     void testSaveWithSuccess() {
-        final var request = new UserRequest("Test User", "test@test.com", "123456");
+        final var request = new UserRequest(NAME, EMAIL, PASSWORD);
 
         when(userService.save(any(UserRequest.class))).thenReturn(just(User.builder().build()));
 
@@ -58,7 +64,7 @@ class UserControllerImplTest {
     @Test
     @DisplayName("Test endoint save with bad request")
     void testSaveWithBadRequest() {
-        final var request = new UserRequest(" Test User", "test@test.com", "123456");
+        final var request = new UserRequest(NAME.concat(" "), EMAIL, PASSWORD);
 
         when(userService.save(any(UserRequest.class))).thenReturn(just(User.builder().build()));
 
@@ -75,20 +81,29 @@ class UserControllerImplTest {
     @Test
     @DisplayName("Test find by id endpoint with success")
     void testFindByIdWithSuccess() {
-        final var id = "123456";
-        final var userResponse = new UserResponse(id, "Test", "test@test.com", "123456");
+        final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
         when(userService.findById(anyString())).thenReturn(Mono.just(User.builder().build()));
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
 
-        webTestClient.get().uri("/users/" + id).accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
-                .jsonPath("$.id").isEqualTo(id)
-                .jsonPath("$.name").isEqualTo("Test")
-                .jsonPath("$.email").isEqualTo("test@test.com")
-                .jsonPath("$.password").isEqualTo("123456");
+        webTestClient.get().uri("/users/" + ID).accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
+                .jsonPath("$.id").isEqualTo(ID)
+                .jsonPath("$.name").isEqualTo(NAME)
+                .jsonPath("$.email").isEqualTo(EMAIL)
+                .jsonPath("$.password").isEqualTo(PASSWORD);
     }
 
     @Test
-    void findAll() {
+    @DisplayName("Test find all with success")
+    void testFindAllWithSuccess() {
+        final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
+        when(userService.findAll()).thenReturn(Flux.just(User.builder().build()));
+        when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
+
+        webTestClient.get().uri("/users").accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
+                .jsonPath("$.[0].id").isEqualTo(ID)
+                .jsonPath("$.[0].name").isEqualTo(NAME)
+                .jsonPath("$.[0].email").isEqualTo(EMAIL)
+                .jsonPath("$.[0].password").isEqualTo(PASSWORD);
     }
 
     @Test
