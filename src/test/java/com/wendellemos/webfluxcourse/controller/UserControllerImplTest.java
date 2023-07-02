@@ -18,6 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 import static reactor.core.publisher.Mono.just;
@@ -49,6 +50,23 @@ class UserControllerImplTest {
         webTestClient.post().uri("/users").contentType(APPLICATION_JSON).body(fromValue(request)).exchange().expectStatus().isCreated();
 
         verify(userService).save(any(UserRequest.class));
+    }
+
+    @Test
+    @DisplayName("Test endoint save with bad request")
+    void testSaveWithBadRequest() {
+        final var request = new UserRequest(" Test User", "test@test.com", "123456");
+
+        when(userService.save(any(UserRequest.class))).thenReturn(just(User.builder().build()));
+
+        webTestClient.post().uri("/users").contentType(APPLICATION_JSON).body(fromValue(request))
+                .exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.path").isEqualTo("/users")
+                .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
+                .jsonPath("$.error").isEqualTo("Validation error")
+                .jsonPath("$.message").isEqualTo("Attribute validation error")
+                .jsonPath("$.errors[0].fieldName").isEqualTo("name")
+                .jsonPath("$.errors[0].message").isEqualTo("Field cannot contain leading or trailing spaces");
     }
 
     @Test
