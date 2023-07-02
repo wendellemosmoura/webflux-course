@@ -4,6 +4,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
 import com.wendellemos.webfluxcourse.entity.User;
 import com.wendellemos.webfluxcourse.mapper.UserMapper;
 import com.wendellemos.webfluxcourse.model.request.UserRequest;
+import com.wendellemos.webfluxcourse.model.response.UserResponse;
 import com.wendellemos.webfluxcourse.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -70,7 +73,18 @@ class UserControllerImplTest {
     }
 
     @Test
-    void findById() {
+    @DisplayName("Test find by id endpoint with success")
+    void testFindByIdWithSuccess() {
+        final var id = "123456";
+        final var userResponse = new UserResponse(id, "Test", "test@test.com", "123456");
+        when(userService.findById(anyString())).thenReturn(Mono.just(User.builder().build()));
+        when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
+
+        webTestClient.get().uri("/users/" + id).accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
+                .jsonPath("$.id").isEqualTo(id)
+                .jsonPath("$.name").isEqualTo("Test")
+                .jsonPath("$.email").isEqualTo("test@test.com")
+                .jsonPath("$.password").isEqualTo("123456");
     }
 
     @Test
