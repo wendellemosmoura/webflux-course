@@ -36,6 +36,7 @@ class UserControllerImplTest {
     public static final String NAME = "Test";
     public static final String EMAIL = "test@test.com";
     public static final String PASSWORD = "123456";
+    public static final String BASE_URI = "/users";
 
     @Autowired
     private WebTestClient webTestClient;
@@ -50,27 +51,27 @@ class UserControllerImplTest {
     private MongoClient mongoClient;
 
     @Test
-    @DisplayName("Test endoint save with success")
+    @DisplayName("Test save endoint with success")
     void testSaveWithSuccess() {
         final var request = new UserRequest(NAME, EMAIL, PASSWORD);
 
         when(userService.save(any(UserRequest.class))).thenReturn(just(User.builder().build()));
 
-        webTestClient.post().uri("/users").contentType(APPLICATION_JSON).body(fromValue(request)).exchange().expectStatus().isCreated();
+        webTestClient.post().uri(BASE_URI).contentType(APPLICATION_JSON).body(fromValue(request)).exchange().expectStatus().isCreated();
 
         verify(userService).save(any(UserRequest.class));
     }
 
     @Test
-    @DisplayName("Test endoint save with bad request")
+    @DisplayName("Test save endoint with bad request")
     void testSaveWithBadRequest() {
         final var request = new UserRequest(NAME.concat(" "), EMAIL, PASSWORD);
 
         when(userService.save(any(UserRequest.class))).thenReturn(just(User.builder().build()));
 
-        webTestClient.post().uri("/users").contentType(APPLICATION_JSON).body(fromValue(request))
+        webTestClient.post().uri(BASE_URI).contentType(APPLICATION_JSON).body(fromValue(request))
                 .exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.path").isEqualTo("/users")
+                .jsonPath("$.path").isEqualTo(BASE_URI)
                 .jsonPath("$.status").isEqualTo(BAD_REQUEST.value())
                 .jsonPath("$.error").isEqualTo("Validation error")
                 .jsonPath("$.message").isEqualTo("Attribute validation error")
@@ -85,7 +86,7 @@ class UserControllerImplTest {
         when(userService.findById(anyString())).thenReturn(Mono.just(User.builder().build()));
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
 
-        webTestClient.get().uri("/users/" + ID).accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
+        webTestClient.get().uri(BASE_URI + "/" + ID).accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
                 .jsonPath("$.id").isEqualTo(ID)
                 .jsonPath("$.name").isEqualTo(NAME)
                 .jsonPath("$.email").isEqualTo(EMAIL)
@@ -96,13 +97,13 @@ class UserControllerImplTest {
     }
 
     @Test
-    @DisplayName("Test find all with success")
+    @DisplayName("Test find all endpoint with success")
     void testFindAllWithSuccess() {
         final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
         when(userService.findAll()).thenReturn(Flux.just(User.builder().build()));
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
 
-        webTestClient.get().uri("/users").accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
+        webTestClient.get().uri(BASE_URI).accept(APPLICATION_JSON).exchange().expectStatus().isOk().expectBody()
                 .jsonPath("$.[0].id").isEqualTo(ID)
                 .jsonPath("$.[0].name").isEqualTo(NAME)
                 .jsonPath("$.[0].email").isEqualTo(EMAIL)
@@ -114,14 +115,14 @@ class UserControllerImplTest {
 
     @Test
     @DisplayName("Test update endpoint with success")
-    void upadate() {
+    void testUpadateWithSuccess() {
         final var request = new UserRequest(NAME, EMAIL, PASSWORD);
         final var userResponse = new UserResponse(ID, NAME, EMAIL, PASSWORD);
 
         when(userService.update(anyString(), any(UserRequest.class))).thenReturn(just(User.builder().build()));
         when(userMapper.toResponse(any(User.class))).thenReturn(userResponse);
 
-        webTestClient.patch().uri("/users/" + ID).contentType(APPLICATION_JSON).body(fromValue(request)).exchange().expectStatus().isOk().expectBody()
+        webTestClient.patch().uri(BASE_URI + "/" + ID).contentType(APPLICATION_JSON).body(fromValue(request)).exchange().expectStatus().isOk().expectBody()
                 .jsonPath("$.id").isEqualTo(ID)
                 .jsonPath("$.name").isEqualTo(NAME)
                 .jsonPath("$.email").isEqualTo(EMAIL)
@@ -132,6 +133,13 @@ class UserControllerImplTest {
     }
 
     @Test
-    void delete() {
+    @DisplayName("Test delete endpoint with success")
+    void testDeleteWithSuccess() {
+        when(userService.delete(anyString())).thenReturn(just(User.builder().build()));
+
+        webTestClient.delete().uri(BASE_URI + "/" + ID).exchange().expectStatus().isOk();
+
+        verify(userService).delete(anyString());
+
     }
 }
